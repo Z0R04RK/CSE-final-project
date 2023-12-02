@@ -37,6 +37,7 @@ struct GameState{
     bool currentTurn;
     int size;
     int turnCount;
+    int score;
 
     bool done;
     Vec lastMove;
