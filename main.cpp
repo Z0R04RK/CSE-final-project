@@ -19,15 +19,17 @@ Vec validMove(GameState game){
     return Vec(0,0);
 }
 
-int getReward(Vertex<GameState> successor, int depth, int player){
+int getReward(Vertex<GameState>& successor, int depth, int player){
     //takes in a vertex and returns the score using minmax algorithm
 
     if (depth == 0 || successor.data.done == true){
         //evaluate the final score
         if (successor.data.hasWon(0)){
+            //x has won
             return 100;
         }
         if (successor.data.hasWon(1)){
+            //o has won
             return -100;
         }
         else{
@@ -39,8 +41,8 @@ int getReward(Vertex<GameState> successor, int depth, int player){
         //player X is the maximizing player
         int max = -101;
         // for each child of vertex
-        for(int i = (successor.neighbors.size()); i > 0; i--){
-            int x = getReward(*(successor.neighbors[i - 1])->location, depth - 1 ,1);
+        for(int i = 0; i < successor.neighbors.size(); i++){
+            int x = getReward(*(successor.neighbors[i]->location), depth - 1 , 1);
             max = (max > x) ? max : x;
         }
         return max;
@@ -51,8 +53,8 @@ int getReward(Vertex<GameState> successor, int depth, int player){
         //player O is the minimizing player
         int min = 101;
         //for each child of vertex
-        for(int i = (successor.neighbors.size()); i > 0; i--){
-            int x = getReward(*(successor.neighbors[i - 1])->location, depth - 1 ,0);
+        for(int i = 0; i < successor.neighbors.size(); i++){
+            int x = getReward(*(successor.neighbors[i]->location), depth - 1 , 0);
             min = (min < x) ? min : x;
         }
         return min;
@@ -60,7 +62,7 @@ int getReward(Vertex<GameState> successor, int depth, int player){
 
 }
 
- Graph<GameState> findGraph(GameState game){
+ Graph<GameState> findGraph(GameState& game){
     Graph<GameState> stateSpace;
     Vertex<GameState>* start = new Vertex<GameState>(game);
 
@@ -88,7 +90,6 @@ int getReward(Vertex<GameState> successor, int depth, int player){
             }
         }
     }
-
     return stateSpace;
 
     // for every successor of start, call getReward(successor, player1)
@@ -97,32 +98,25 @@ int getReward(Vertex<GameState> successor, int depth, int player){
     //return Vec(0,0);
 }
 
-// Vec findBestMove(GameState game){
-//     auto startGame = findGraph(game);
-//     auto startVertice = startGame
-//     auto bestMove = *((starting.vertices)[0]);
-//     for(auto move : *(starting.vertices[0]).data.neighbors){
-//         if(player == 0){
-//             if (getReward(bestMove) < getReward(*move)){
-//                 bestMove = move;
-//             }
-//         }
-//         else{
-//             if (getReward(bestMove) > getReward(*move)){
-//                 bestMove = move;
-//             }
-//         }
-//     }
-    
-//     for(int i = 0; i < game.size; i++){
-//                 for (int j = 0; j < game.size; j++){
-//                     if(game.data.grid[i][j] != bestMove.data.grid[i][j]){
-//                         return Vec(i,j);
-//                     }
-//                 }
-//             }
+Vec findBestMove(GameState& game){
+    auto data = findGraph(game);
+    auto successor = *(data.vertices[0]);
 
-// }
+    Vec bestMove = data.vertices[0]->neighbors[0]->location->data.lastMove;
+    auto bestReward = getReward(*(successor.neighbors[0])->location, 9 - game.turnCount, !game.currentTurn);
+
+    for(int i = (successor.neighbors.size()) - 1; i >= 0; i--){
+        auto reward = getReward(*(successor.neighbors[i])->location, 9 - game.turnCount, !game.currentTurn);
+        std::cout << reward << " : " <<  data.vertices[0]->neighbors[i]->location->data.lastMove << std:: endl;
+        if(reward > bestReward){
+            bestReward = reward;
+            bestMove = data.vertices[0]->neighbors[i]->location->data.lastMove;
+        }
+        }
+    return bestMove;
+    }
+
+
 
 
 
@@ -139,19 +133,19 @@ int main(){
 
         int x, y;
 
-        //if (game.currentTurn){
-            //Vec move = findBestMove(game);
-           // x = move.x;
-            //y = move.y;
-        //}
-        //else{
+        if (!game.currentTurn){
+            Vec move = findBestMove(game);
+            x = move.x;
+            y = move.y;
+        }
+        else{
             cout << endl;
-            auto jelly = findGraph(game);
-            std::cout << game.turnCount;
-            std::cout << getReward(*(jelly.vertices[0]), 9 - game.turnCount, game.currentTurn);
+            //auto jelly = findGraph(game);
+            //std::cout << getReward(*(jelly.vertices[0]), 9 - game.turnCount, game.currentTurn) << std::endl;
+            
             cout << "Enter move for (" << (!game.currentTurn ? "X" : "O") << "): ";
             cin >> x >> y;
-        //}
+        }
 
         game.play(x, y);
     }
